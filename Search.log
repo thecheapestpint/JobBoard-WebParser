@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2017-08-02T21:02:44</date>
+  <millis>1501704164310</millis>
+  <sequence>0</sequence>
+  <logger>org.openqa.selenium.phantomjs.PhantomJSDriverService</logger>
+  <level>INFO</level>
+  <class>org.openqa.selenium.phantomjs.PhantomJSDriverService</class>
+  <method>&lt;init&gt;</method>
+  <thread>17</thread>
+  <message>executable: C:\Users\Mitchell\IdeaProjects\DropWizardScraper\target\classes\Phantom\phantomjs.exe</message>
+</record>
+<record>
+  <date>2017-08-02T21:02:44</date>
+  <millis>1501704164310</millis>
+  <sequence>1</sequence>
+  <logger>org.openqa.selenium.phantomjs.PhantomJSDriverService</logger>
+  <level>INFO</level>
+  <class>org.openqa.selenium.phantomjs.PhantomJSDriverService</class>
+  <method>&lt;init&gt;</method>
+  <thread>17</thread>
+  <message>port: 12019</message>
+</record>
+<record>
+  <date>2017-08-02T21:02:44</date>
+  <millis>1501704164310</millis>
+  <sequence>2</sequence>
+  <logger>org.openqa.selenium.phantomjs.PhantomJSDriverService</logger>
+  <level>INFO</level>
+  <class>org.openqa.selenium.phantomjs.PhantomJSDriverService</class>
+  <method>&lt;init&gt;</method>
+  <thread>17</thread>
+  <message>arguments: [--webdriver=12019, --webdriver-logfile=C:\Users\Mitchell\IdeaProjects\DropWizardScraper\phantomjsdriver.log]</message>
+</record>
+<record>
+  <date>2017-08-02T21:02:44</date>
+  <millis>1501704164310</millis>
+  <sequence>3</sequence>
+  <logger>org.openqa.selenium.phantomjs.PhantomJSDriverService</logger>
+  <level>INFO</level>
+  <class>org.openqa.selenium.phantomjs.PhantomJSDriverService</class>
+  <method>&lt;init&gt;</method>
+  <thread>17</thread>
+  <message>environment: {}</message>
+</record>
+<record>
+  <date>2017-08-02T21:02:46</date>
+  <millis>1501704166243</millis>
+  <sequence>4</sequence>
+  <logger>org.openqa.selenium.remote.ProtocolHandshake</logger>
+  <level>INFO</level>
+  <class>org.openqa.selenium.remote.ProtocolHandshake</class>
+  <method>createSession</method>
+  <thread>17</thread>
+  <message>Detected dialect: OSS</message>
+</record>

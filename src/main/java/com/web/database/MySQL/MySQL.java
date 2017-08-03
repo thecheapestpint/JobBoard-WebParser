@@ -1,0 +1,92 @@
+package com.web.database.MySQL;
+
+import java.sql.*;
+import java.util.ArrayList;
+
+/**
+ * Created by pamitchell on 11/07/2017.
+ */
+public class MySQL {
+
+    private Connection con;
+
+    public MySQL(String db) {
+        con = MySQLConfig.getConnectionURL(db);
+    }
+
+    public static MySQL instance(String db) {
+        return new MySQL(db);
+    }
+
+
+    public ResultSet select(String query, ArrayList args){
+        ResultSet resultSet = null;
+        try {
+            if (args != null) {
+                PreparedStatement preparedStatement = prepare(query, args, false);
+                resultSet = preparedStatement.executeQuery();
+            } else {
+                Statement stm = this.con.createStatement();
+                resultSet = stm.executeQuery(query);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return resultSet;
+    }
+
+
+    public int rowCount(String query, ArrayList args) {
+        int count = 0;
+        ResultSet resultSet = select(query, args);
+        try {
+            count = resultSet.next() ? resultSet.getInt(1) : 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return count;
+    }
+
+
+    public int update(String query, ArrayList args) {
+        int last_id = 0;
+        try {
+            PreparedStatement preparedStatement = prepare(query, args, true);
+            preparedStatement.executeUpdate();
+            ResultSet rs = preparedStatement.getGeneratedKeys();
+            if(rs.next()) {
+                 last_id = rs.getInt(1);
+            }
+            preparedStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return last_id;
+    }
+
+    private PreparedStatement prepare(String query, ArrayList args, boolean update) throws SQLException {
+
+        PreparedStatement preparedStatement = !update ? this.con.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY) : this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+
+        for (int x = 0; x < args.size(); x++) {
+            String type = args.get(x).getClass().getSimpleName();
+            if (type.equals("Integer")) {
+                preparedStatement.setInt(x + 1, Integer.valueOf(args.get(x).toString()));
+
+            } else if (type.equals("Float")) {
+                preparedStatement.setFloat(x + 1, Float.valueOf(args.get(x).toString()));
+
+            } else {
+                preparedStatement.setString(x + 1, String.valueOf(args.get(x)));
+
+            }
+        }
+        return preparedStatement;
+    }
+
+
+}
