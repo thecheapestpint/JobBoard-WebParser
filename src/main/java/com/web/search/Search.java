@@ -12,6 +12,7 @@ import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import javafx.beans.binding.IntegerBinding;
 import javassist.bytecode.stackmap.TypeData;
 
+import javax.print.attribute.standard.JobHoldUntil;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -136,7 +137,8 @@ public class Search {
         for (String site : websites) {
             System.out.println("Checking " + site);
             Crawler crawler = new Crawler(keyword, location);
-            List<JobBoardHolder> jobsFound = crawler.startParsing(site);
+            crawler.startParsing(site);
+            List<JobBoardHolder> jobsFound = crawler.returnJobs();
             if (jobsFound != null){
                 jobs.addAll(jobsFound);
             }

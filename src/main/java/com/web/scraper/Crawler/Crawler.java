@@ -21,6 +21,7 @@ public class Crawler {
 
     private boolean searchFound = false;
 
+    private List<JobBoardHolder> jobs;
 
     private List<String> pagesAllowed = new ArrayList<String>();
     private List<String> pagesDisallowed = new ArrayList<String>();
@@ -38,12 +39,16 @@ public class Crawler {
         return new Crawler(keywords, location);
     }
 
+    public List<JobBoardHolder> returnJobs(){
+        return this.jobs;
+    }
+
     public void setReturnJobs(boolean returnJobs){
         this.returnJobs = returnJobs;
     }
 
 
-    public synchronized List<JobBoardHolder> startParsing(String startingURl) {
+    public void startParsing(String startingURl) {
         parser = new JobBoardParser(startingURl);
         parser.setKeyword(keywords);
         parser.setLocation(location);
@@ -67,19 +72,13 @@ public class Crawler {
                 String phantomURL = search.getPhantomURL();
                 parser.setFirstPageURL(phantomURL);
                 parser.scrapPage(newPage);
-                jobs = parser.getJobs();
-                System.out.println(jobs.size() + "");
-                if (jobs.size() > 0) {
-                    addToDatabase(jobs);
+                this.jobs = parser.getJobs();
+                System.out.println(this.jobs.size() + "");
+                if (this.jobs.size() > 0) {
+                    addToDatabase(this.jobs);
                 }
             }
         }
-
-        if (this.returnJobs){
-            return jobs;
-        }
-
-        return null;
     }
 
 

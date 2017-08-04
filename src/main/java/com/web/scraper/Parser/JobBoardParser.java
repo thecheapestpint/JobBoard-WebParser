@@ -83,6 +83,8 @@ public class JobBoardParser extends BaseParser {
         }
     }
 
+
+
     private boolean checkNextButton(Element nextPageContainer, Map<String, String> nextPage, String nextKey){
         //return nextPageContainer.tagName().equals(nextPage.get("tag")) && nextPageContainer.text().toLowerCase().contains("next") || nextPageContainer.attributes().get(nextKey).contains(nextPage.get(nextKey));
         return nextPageContainer.tagName().equals(nextPage.get("tag")) && nextPageContainer.text().toLowerCase().contains("next");
@@ -205,7 +207,7 @@ public class JobBoardParser extends BaseParser {
         Map<String, Object> search = new HashMap();
         search.put("websiteURL", this.url);
         Document searchDocument = mongoWebsite.createDocument(search);
-        Website websiteConfig = mongoWebsite.findOneWebsite("test", searchDocument);
+        Website websiteConfig = mongoWebsite.findOneWebsite("website_config", searchDocument);
         pageConfig = websiteConfig.getPage();
         return websiteConfig;
     }
@@ -215,7 +217,7 @@ public class JobBoardParser extends BaseParser {
         Map<String, Object> search = new HashMap();
         search.put("websiteURL", this.url);
         Document searchDocument = mongoWebsite.createDocument(search);
-        return mongoWebsite.documentCount("test", searchDocument) != 0;
+        return mongoWebsite.documentCount("website_config", searchDocument) != 0;
     }
 
     public List<JobBoardHolder> getJobs() {

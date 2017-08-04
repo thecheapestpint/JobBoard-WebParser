@@ -8,6 +8,7 @@ import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
 
 import java.io.IOException;
 import java.net.URI;
@@ -65,12 +66,16 @@ public class BaseParser {
             URI uri = Thread.currentThread().getContextClassLoader().getResource("Phantom/phantomjs.exe").toURI();
             path = Paths.get(uri);
             System.setProperty("phantomjs.binary.path", path.toString());
-            webDriver = MySingleton.INSTANCE.getWebDriver();
+            webDriver = new PhantomJSDriver();
             webDriver.get(url);
             phantomURL = webDriver.getCurrentUrl();
             return Jsoup.parse(webDriver.getPageSource());
         } catch (URISyntaxException e) {
             e.printStackTrace();
+        } finally {
+            if (webDriver != null) {
+                webDriver.quit();
+            }
         }
 
         return null;

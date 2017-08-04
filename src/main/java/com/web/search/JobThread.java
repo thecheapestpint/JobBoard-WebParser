@@ -37,7 +37,7 @@ public class JobThread implements Runnable {
     public void run() {
         while (running) {
             Crawler crawler = localCrawler.get();
-            List<JobBoardHolder> jobs = crawler.startParsing(url);
+            crawler.startParsing(url);
             running = false;
         }
     }
