@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class MySQLTest {
 
-    private ArrayList<String> testArgs;
+  /*  private ArrayList<String> testArgs;
 
     public MySQLTest(){
         testArgs = new ArrayList<String>();
@@ -21,6 +21,7 @@ public class MySQLTest {
 
     @Test
     public void aCheckKeywordEmpty(){
+        testArgs.clear();
         testArgs.add("test keyword");
         MySQL mySQL = MySQL.instance("job_search");
         String query = "SELECT COUNT(*) FROM keywords WHERE keyword = ? LIMIT 1";
@@ -30,6 +31,7 @@ public class MySQLTest {
 
     @Test
     public void bInsertKeyword(){
+        testArgs.clear();
         testArgs.add("test keyword");
         MySQL mySQL = MySQL.instance("job_search");
         String query = "INSERT INTO keywords (keyword) VALUE (?)";
@@ -39,6 +41,7 @@ public class MySQLTest {
 
     @Test
     public void checkKeywordExists(){
+        testArgs.clear();
         testArgs.add("test keyword");
         MySQL mySQL = MySQL.instance("job_search");
         String query = "SELECT COUNT(*) FROM keywords WHERE keyword = ? LIMIT 1";
@@ -48,11 +51,13 @@ public class MySQLTest {
 
     @Test
     public void deleteKeyword(){
+        testArgs.clear();
         testArgs.add("test keyword");
         MySQL mySQL = MySQL.instance("job_search");
         String query = "DELETE FROM keywords WHERE keyword = ?";
         int count = mySQL.update(query, testArgs);
         Assert.assertEquals("Should of deleted", 1, count);
     }
+    */
 
 }

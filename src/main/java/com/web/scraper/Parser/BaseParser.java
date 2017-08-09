@@ -9,7 +9,10 @@ import org.jsoup.select.Elements;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriverService;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +33,7 @@ public class BaseParser {
 
     public BaseParser(String url) {
         this.url = url;
-        mongoWebsite = new MongoWebsite("test");
+        mongoWebsite = new MongoWebsite("job_search");
     }
 
     public void destroy(){
@@ -61,11 +64,14 @@ public class BaseParser {
         // Phantom allows this. Then we pass it back into JSOUP
         Path path = null;
         WebDriver webDriver = null;
+        System.out.println(System.getProperty("os.name"));
         try {
-            // path = Paths.get(ClassLoader.getSystemResource("Phantom/phantomjs.exe").toURI());
-            URI uri = Thread.currentThread().getContextClassLoader().getResource("Phantom/phantomjs.exe").toURI();
-            path = Paths.get(uri);
-            System.setProperty("phantomjs.binary.path", path.toString());
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                path = Paths.get(ClassLoader.getSystemResource("Phantom/phantomjs.exe").toURI());
+                // URI uri = Thread.currentThread().getContextClassLoader().getResource("Phantom/phantomjs.exe").toURI();
+                System.setProperty("phantomjs.binary.path", path.toString());
+            }
+
             webDriver = new PhantomJSDriver();
             webDriver.get(url);
             phantomURL = webDriver.getCurrentUrl();

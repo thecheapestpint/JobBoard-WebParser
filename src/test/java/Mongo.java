@@ -22,7 +22,7 @@ public class Mongo {
     @Test
     public void insertOne(){
 
-        MongoWebsite mongo = new MongoWebsite("test");
+        MongoWebsite mongo = new MongoWebsite("job_search");
 
         Map<String, String> keyword = new HashMap<>();
         keyword.put("class", "test");

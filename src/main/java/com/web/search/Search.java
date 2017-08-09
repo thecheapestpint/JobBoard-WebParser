@@ -1,31 +1,26 @@
 package com.web.search;
 
-import com.google.gson.Gson;
+
 import com.web.database.MongoDB.MongoJobBoard;
-import com.web.database.MongoDB.MongoWebsite;
+
 import com.web.database.MongoDB.Pojo.JobBoardHolder;
-import com.web.database.MongoDB.Pojo.Website;
+
 import com.web.database.MySQL.MySQL;
 import com.web.scraper.Crawler.Crawler;
 import com.web.scraper.Crawler.JobBoard.JobBoardConfig;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
-import javafx.beans.binding.IntegerBinding;
-import javassist.bytecode.stackmap.TypeData;
 
-import javax.print.attribute.standard.JobHoldUntil;
-import java.io.IOException;
+import com.web.scraper.Misc.Convert;
+
+
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 /**
  * Created by Mitchell on 28/07/2017.
  */
@@ -39,10 +34,9 @@ public class Search {
     private String location;
     private int locationID;
 
-    private static final Logger LOGGER = Logger.getLogger( TypeData.ClassName.class.getName() );
-
     private ArrayList args;
 
+    private static final Logger logger = LogManager.getLogger(Search.class);
 
     /*
 
@@ -54,20 +48,16 @@ public class Search {
     public Search() {
         mySQL = new MySQL("job_search");
         args = new ArrayList();
-        Handler fh = null;
-        try {
-            fh = new FileHandler("Search.log");
-            Logger.getLogger("").addHandler(fh);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        BasicConfigurator.configure();
+        logger.trace("Search INIT.");
     }
 
-    public void cronCrawl(){
+    public void cronCrawl() {
 
-        List<Map<String,String>> searchRes = getSearchKeywordsAndLocations();
+        logger.trace("Cron Started.");
+        List<Map<String, String>> searchRes = getSearchKeywordsAndLocations();
         if (searchRes.size() > 0) {
-            for (Map<String,String> res : searchRes) {
+            for (Map<String, String> res : searchRes) {
                 keyword = res.get("keyword");
                 location = res.get("location");
                 crawlForJobs(false);
@@ -76,9 +66,11 @@ public class Search {
         }
     }
 
-    private List<Map<String, String>> getSearchKeywordsAndLocations(){
+    private List<Map<String, String>> getSearchKeywordsAndLocations() {
 
         List<Map<String, String>> results = new ArrayList();
+
+        logger.trace("Searching keywords and locations.");
 
         String query = "SELECT search_query.search_id, keywords.keyword, locations.location FROM search_query " +
                 "LEFT JOIN keywords ON keywords.keyword_id = search_query.keyword_id " +
@@ -86,11 +78,12 @@ public class Search {
         ResultSet rs = mySQL.select(query, null);
 
         try {
-            while (rs.next()){
+            while (rs.next()) {
                 Map<String, String> search = new HashMap<String, String>();
                 search.put("searchID", rs.getString(1));
                 search.put("keyword", rs.getString(2));
                 search.put("location", rs.getString(3));
+                logger.trace("found keywords and location: " + search.toString());
                 results.add(search);
             }
         } catch (SQLException e) {
@@ -109,29 +102,59 @@ public class Search {
         this.location = location;
 
         if (!checkKeywordExists() || !checkLocationExists()) {
-            System.out.println("SQL error when inserting keyword or location...");
+            System.out.println("");
+            logger.trace("SQL error when inserting keyword or location...");
         } else {
-            int lastSearched = checkWhenLastSearched();
+            Timestamp lastSearched = checkWhenLastSearched();
             int HOURS_LAST_SEARCHED = 6;
-            jobResults = lastSearched == -1 || ((lastSearched > -1) && (com.web.search.Date.findTimeInHours(lastSearched) > HOURS_LAST_SEARCHED)) ? crawlForJobs(true) : searchDBForJobs();
-            boolean updated = (lastSearched == -1) ? addSearch() : updateSearch();
+            if (lastSearched == null || com.web.search.Date.findTimeInHours(lastSearched.getTime()) > HOURS_LAST_SEARCHED) {
+                logger.trace("Crawling");
+                jobResults = crawlForJobs(true);
+            } else {
+                logger.trace("searchJobs - Search for jobs");
+                jobResults = searchDBForJobs();
+            }
+            boolean updated = (lastSearched == null) ? addSearch() : updateSearch();
         }
 
         return jobResults;
     }
 
+
+    public List<JobBoardHolder> smartJobs(String keyword, String location, int amount){
+        List<JobBoardHolder> jobResults;
+
+        this.keyword = keyword;
+        this.location = location;
+
+        // If Keyword or Location has not been found, then put it in the list.
+        // This will be done in the next cron.
+        // Don't care as much about smart devices
+        if (!checkKeywordExists() || !checkLocationExists()){
+            jobResults = null;
+        } else{
+            jobResults = searchDBForJobs();
+            if (jobResults.size() > amount){
+                jobResults = Convert.getJobBoardList(jobResults, keyword, location, amount);
+            }
+        }
+        return jobResults;
+    }
+
+
     private List<JobBoardHolder> searchDBForJobs() {
         String collection = this.keyword + "-" + this.location;
+        logger.trace("searchDB - collection :" + collection);
         List<JobBoardHolder> jobs = new ArrayList();
         MongoJobBoard mongoJobBoard = new MongoJobBoard("job_search");
         if (mongoJobBoard.documentCount(collection, null) > 0) {
+            logger.trace("document count is greater than 0");
             jobs = mongoJobBoard.getJobs(collection);
         }
-        //Convert to JSON
         return jobs;
     }
 
-    private List<JobBoardHolder> crawlForJobs(boolean returnJobs){
+    private List<JobBoardHolder> crawlForJobs(boolean returnJobs) {
         List<JobBoardHolder> jobs = new ArrayList();
         List<String> websites = JobBoardConfig.getStartingURLs();
         for (String site : websites) {
@@ -139,12 +162,12 @@ public class Search {
             Crawler crawler = new Crawler(keyword, location);
             crawler.startParsing(site);
             List<JobBoardHolder> jobsFound = crawler.returnJobs();
-            if (jobsFound != null){
+            if (jobsFound != null) {
                 jobs.addAll(jobsFound);
             }
         }
 
-        if (returnJobs){
+        if (returnJobs) {
             return (jobs);
         }
         return null;
@@ -160,7 +183,6 @@ public class Search {
             worker.setName(site);
             worker.start();
             System.out.println("New Thread Started");
-            LOGGER.log(Level.FINE, "New Thread started for: " + site);
             threads.add(worker);
         }
 
@@ -178,8 +200,8 @@ public class Search {
         int i = 0;
     }
 
-    private int checkWhenLastSearched() {
-        int lastSearched = -1;
+    private Timestamp checkWhenLastSearched() {
+        Timestamp lastSearched = null;
         String searchQuery = "SELECT last_search FROM search_query WHERE keyword_id = ? AND location_id = ? LIMIT 1";
 
         ArrayList<Integer> args = new ArrayList();
@@ -189,7 +211,7 @@ public class Search {
         ResultSet res = mySQL.select(searchQuery, args);
         try {
             if (res.next()) {
-                lastSearched = res.getInt("last_search");
+                lastSearched = res.getTimestamp("last_search");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -272,18 +294,10 @@ public class Search {
         return inserted;
     }
 
-    private boolean checkSearchExists() {
-        String rowQuery = "SELECT search_id FROM search_query WHERE keyword_id IN (SELECT keyword_id FROM keywords WHERE keyword = ?)" +
-                " AND location_id IN (SELECT location_id FROM locations WHERE location = ?) LIMIT 1";
-        args.clear();
-        args.add(keywordID);
-        args.add(locationID);
-        int count = mySQL.rowCount(rowQuery, args);
-        return count != 0;
-    }
 
-    private boolean updateSearch(){
-        String updateQuery = "UPDATE search_query WHERE keyword_id = ? AND location_id = ?";
+
+    private boolean updateSearch() {
+        String updateQuery = "UPDATE search_query set last_search = ? WHERE keyword_id = ? AND location_id = ?";
         args.clear();
         args.add(new Timestamp(Calendar.getInstance().getTime().getTime()));
         args.add(keywordID);
@@ -292,7 +306,7 @@ public class Search {
         return count != 0;
     }
 
-    private boolean updateSearchByID(int id){
+    private boolean updateSearchByID(int id) {
         String updateQuery = "UPDATE search_query SET last_search = ? WHERE search_id = ?";
         args.clear();
         args.add(new Timestamp(Calendar.getInstance().getTime().getTime()));
@@ -301,7 +315,7 @@ public class Search {
         return count != 0;
     }
 
-    private boolean addSearch(){
+    private boolean addSearch() {
         String insertQuery = "INSERT INTO search_query (keyword_id, location_id) VALUES (?, ?)";
         args.clear();
         args.add(keywordID);

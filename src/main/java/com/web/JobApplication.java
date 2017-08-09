@@ -19,7 +19,6 @@ public class JobApplication extends Application<JobSearchConfig> {
 
     @Override
     public void initialize(Bootstrap<JobSearchConfig> bootstrap) {
-        // nothing to do yet
     }
 
     @Override

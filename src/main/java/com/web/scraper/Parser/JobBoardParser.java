@@ -157,12 +157,18 @@ public class JobBoardParser extends BaseParser {
 
         String titleKey = getKeyNotTag(jobTitleConfig.keySet());
 
-        Element titleElement = container.getElementsByAttributeValueContaining(titleKey, jobTitleConfig.get(titleKey)).first();
+        Elements elems = container.getElementsByAttributeValueMatching(titleKey, jobTitleConfig.get(titleKey));
 
-        if (titleElement != null && checkKeywordContains(titleElement.text())) {
-            jobTitle = titleElement.text();
+        if (elems != null && elems.size() > 0) {
+            System.out.println("Title element found");
+            Element titleElement = elems.get(0);
+
+            if (titleElement != null && checkKeywordContains(titleElement.text())) {
+                jobTitle = titleElement.text();
+                System.out.println("Title: " + jobTitle);
+            }
+
         }
-
         return jobTitle;
 
     }

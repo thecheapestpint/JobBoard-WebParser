@@ -1,6 +1,7 @@
 package com.web.search;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
@@ -9,10 +10,11 @@ import java.time.temporal.ChronoUnit;
  */
 public class Date {
 
-    public static long findTimeInHours(int previousTimestamp){
-        LocalTime localTime = LocalTime.now();
+    public static long findTimeInHours(long previousTimestamp){
+        LocalDateTime localTime = LocalDateTime.now();
         Timestamp timestamp = new Timestamp(previousTimestamp);
-        LocalTime previousTime = timestamp.toLocalDateTime().toLocalTime();
+        LocalDateTime previousTime = timestamp.toLocalDateTime();
+        long check = ChronoUnit.HOURS.between(previousTime, localTime);
         return ChronoUnit.HOURS.between(previousTime, localTime);
     }
 

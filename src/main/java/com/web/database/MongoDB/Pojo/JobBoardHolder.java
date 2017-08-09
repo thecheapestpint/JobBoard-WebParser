@@ -18,6 +18,10 @@ public class JobBoardHolder {
     private String jobBoardURL;
     private long timeAdded;
 
+    public JobBoardHolder(){
+
+    }
+
     public JobBoardHolder(String title, String location, String salary, String link, String jobBoardURL ){
         this.jobTitle = title;
         this.jobLocation = location;

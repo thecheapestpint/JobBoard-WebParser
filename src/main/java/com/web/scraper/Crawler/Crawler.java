@@ -86,7 +86,7 @@ public class Crawler {
 
         String collection = this.keywords + "-" + this.location;
 
-        MongoJobBoard mongoJobs = new MongoJobBoard("test");
+        MongoJobBoard mongoJobs = new MongoJobBoard("job_search");
         for (JobBoardHolder job : jobs) {
             Map<String, Object> map = new HashMap<String, Object>();
             map.put("jobLink", job.getJobLink());

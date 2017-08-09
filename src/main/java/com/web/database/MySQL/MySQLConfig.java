@@ -14,7 +14,7 @@ public class MySQLConfig {
 
     private static String URL = "jdbc:mysql://localhost:3306/";
     private static String username = "root";
-    private static String password = "";
+    private static String password = "VWxMhFo3X0";
 
     public static Connection getConnectionURL(String db){
         try {

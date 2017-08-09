@@ -15,18 +15,18 @@ public class SearchPost {
     private String location;
 
     public String getKeyword(){
-        return this.keyword;
+        return this.keyword.toLowerCase();
     }
 
     public void setKeyword(String keyword){
-        this.keyword = keyword;
+        this.keyword = keyword.toLowerCase();
     }
 
     public String getLocation(){
-        return this.location;
+        return this.location.toLowerCase();
     }
 
     public void setLocation(String location){
-        this.location = location;
+        this.location = location.toLowerCase();
     }
 }

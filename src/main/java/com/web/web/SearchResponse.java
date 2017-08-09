@@ -13,6 +13,7 @@ public class SearchResponse {
 
     private long id;
     private boolean success;
+    private int count;
     private List<JobBoardHolder> jobs;
 
     public SearchResponse() {
@@ -22,6 +23,7 @@ public class SearchResponse {
     public SearchResponse(boolean success, List<JobBoardHolder> content) {
         this.success = success;
         this.jobs = content;
+        this.count = content == null ? 0 : content.size();
     }
 
     public boolean getSuccess(){
