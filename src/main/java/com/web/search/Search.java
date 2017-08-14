@@ -1,6 +1,7 @@
 package com.web.search;
 
 
+import com.web.JobApplication;
 import com.web.database.MongoDB.MongoJobBoard;
 
 import com.web.database.MongoDB.Pojo.JobBoardHolder;
@@ -18,9 +19,10 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 
+import com.web.web.SearchResponse;
 import org.apache.log4j.BasicConfigurator;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 /**
  * Created by Mitchell on 28/07/2017.
  */
@@ -54,13 +56,15 @@ public class Search {
 
     public void cronCrawl() {
 
-        logger.trace("Cron Started.");
+        logger.debug("Cron Started.");
         List<Map<String, String>> searchRes = getSearchKeywordsAndLocations();
         if (searchRes.size() > 0) {
             for (Map<String, String> res : searchRes) {
                 keyword = res.get("keyword");
                 location = res.get("location");
-                crawlForJobs(false);
+                logger.debug("Cron keyword: " + keyword);
+                logger.debug("Cron Location:" + location);
+                crawlForJobs();
                 updateSearchByID((Integer.parseInt(res.get("searchID"))));
             }
         }
@@ -94,9 +98,67 @@ public class Search {
     }
 
 
-    public List<JobBoardHolder> searchJobs(String keyword, String location) {
+    public void crawlListCron(){
+        List<Integer> crawlList = getCrawlList();
+        for (int searchID : crawlList){
+            Map<String, String> keywordLocation = getCrawlListKeywordsLocations(searchID);
+            this.keyword = keywordLocation.get("keyword");
+            this.location = keywordLocation.get("location");
+            crawlForJobs();
+            boolean crawlUpdated = searchCrawlUpdate(searchID);
+            logger.debug("Crawler updated " + searchID + ": " + crawlUpdated);
+            boolean searchUpdated = updateSearchByID(searchID);
+            logger.debug("Search Updated " + searchID + ": " + searchUpdated);
+        }
+    }
 
-        List<JobBoardHolder> jobResults = null;
+    /*
+       I HATE HOW I'VE DONE THIS.
+       ALL OF THIS CAN BE TIDIER.
+     */
+
+    private Map<String, String> getCrawlListKeywordsLocations(int searchID) {
+        args.clear();
+        String query = "SELECT search_query.search_id, keywords.keyword, locations.location FROM search_query " +
+                "LEFT JOIN keywords ON keywords.keyword_id = search_query.keyword_id " +
+                "LEFT JOIN locations ON locations.location_id = search_query.location_id WHERE search_query.search_id = ? LIMIT 1";
+        args.add(searchID);
+        ResultSet rs = mySQL.select(query, args);
+
+        Map<String, String> results = new HashMap<String, String>();
+
+        try {
+            while (rs.next()) {
+                results.put("keyword", rs.getString(2));
+                results.put("location", rs.getString(3));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    private List<Integer> getCrawlList(){
+        args.clear();
+        List<Integer> crawlList = new ArrayList<>();
+        String crawlListQuery = "SELECT search_id FROM search_crawl WHERE searched = ?";
+        args.add(1);
+        ResultSet resultSet = mySQL.select(crawlListQuery, args);
+        try {
+            if (resultSet.next()) {
+                crawlList.add(resultSet.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return crawlList;
+    }
+
+    public SearchResponse searchJobs(String keyword, String location) {
+
+        List<JobBoardHolder> jobResults;
 
         this.keyword = keyword;
         this.location = location;
@@ -104,22 +166,37 @@ public class Search {
         if (!checkKeywordExists() || !checkLocationExists()) {
             System.out.println("");
             logger.trace("SQL error when inserting keyword or location...");
+            return new SearchResponse(false, "Could not process your request. Please try again later.");
         } else {
             Timestamp lastSearched = checkWhenLastSearched();
-            int HOURS_LAST_SEARCHED = 6;
-            if (lastSearched == null || com.web.search.Date.findTimeInHours(lastSearched.getTime()) > HOURS_LAST_SEARCHED) {
-                logger.trace("Crawling");
-                jobResults = crawlForJobs(true);
+            if (lastSearched == null) {
+                addSearchToCrawlList();
+                return new SearchResponse(true, "We need to scrape some websites for your search. Please give us 10 minutes.");
             } else {
                 logger.trace("searchJobs - Search for jobs");
                 jobResults = searchDBForJobs();
             }
-            boolean updated = (lastSearched == null) ? addSearch() : updateSearch();
+            updateSearch();
         }
 
-        return jobResults;
+        return new SearchResponse(true, jobResults);
     }
 
+
+    private void addSearchToCrawlList(){
+        int searchID = addSearch();
+        if (searchID == 0) {
+            System.out.println("Unable to insert into database");
+        } else {
+            String query = "INSERT INTO search_crawl (search_id) VALUE (?)";
+            args.clear();
+            args.add((searchID));
+            int insert = mySQL.update(query, args, false);
+            if (insert == 0){
+                System.out.println("Error inserting search crawl");
+            }
+        }
+    }
 
     public List<JobBoardHolder> smartJobs(String keyword, String location, int amount){
         List<JobBoardHolder> jobResults;
@@ -154,51 +231,18 @@ public class Search {
         return jobs;
     }
 
-    private List<JobBoardHolder> crawlForJobs(boolean returnJobs) {
-        List<JobBoardHolder> jobs = new ArrayList();
+    private void crawlForJobs() {
+
         List<String> websites = JobBoardConfig.getStartingURLs();
         for (String site : websites) {
             System.out.println("Checking " + site);
             Crawler crawler = new Crawler(keyword, location);
             crawler.startParsing(site);
-            List<JobBoardHolder> jobsFound = crawler.returnJobs();
-            if (jobsFound != null) {
-                jobs.addAll(jobsFound);
-            }
         }
 
-        if (returnJobs) {
-            return (jobs);
-        }
-        return null;
     }
 
 
-    private void crawlForJobs_() {
-        List<Thread> threads = new ArrayList();
-        List<String> websites = JobBoardConfig.getStartingURLs();
-        for (String site : websites) {
-            Runnable th = new JobThread(this.keyword, this.location, site);
-            Thread worker = new Thread(th);
-            worker.setName(site);
-            worker.start();
-            System.out.println("New Thread Started");
-            threads.add(worker);
-        }
-
-        int running = 0;
-        do {
-            running = 0;
-            for (Thread thread : threads) {
-                if (thread.isAlive()) {
-                    running++;
-                }
-            }
-            System.out.println("We have " + running + " running threads. ");
-        } while (running > 0);
-
-        int i = 0;
-    }
 
     private Timestamp checkWhenLastSearched() {
         Timestamp lastSearched = null;
@@ -254,7 +298,7 @@ public class Search {
         String insertKeyword = "INSERT INTO keywords (keyword) VALUE (?)";
         ArrayList<String> args = new ArrayList<String>();
         args.add(keyword);
-        int inserted = mySQL.update(insertKeyword, args);
+        int inserted = mySQL.update(insertKeyword, args, false);
         System.out.println("Keyword insert number: " + inserted);
         return inserted;
     }
@@ -289,7 +333,7 @@ public class Search {
         String insertLocation = "INSERT INTO locations (location) VALUE (?)";
         ArrayList<String> args = new ArrayList<String>();
         args.add(location);
-        int inserted = mySQL.update(insertLocation, args);
+        int inserted = mySQL.update(insertLocation, args, false);
         System.out.println("Location insert number: " + inserted);
         return inserted;
     }
@@ -302,7 +346,7 @@ public class Search {
         args.add(new Timestamp(Calendar.getInstance().getTime().getTime()));
         args.add(keywordID);
         args.add(locationID);
-        int count = mySQL.update(updateQuery, args);
+        int count = mySQL.update(updateQuery, args, false);
         return count != 0;
     }
 
@@ -311,17 +355,24 @@ public class Search {
         args.clear();
         args.add(new Timestamp(Calendar.getInstance().getTime().getTime()));
         args.add(id);
-        int count = mySQL.update(updateQuery, args);
+        int count = mySQL.update(updateQuery, args, false);
         return count != 0;
     }
 
-    private boolean addSearch() {
+    private int addSearch() {
         String insertQuery = "INSERT INTO search_query (keyword_id, location_id) VALUES (?, ?)";
         args.clear();
         args.add(keywordID);
         args.add(locationID);
-        int count = mySQL.update(insertQuery, args);
-        return count != 0;
+        return mySQL.update(insertQuery, args, false);
+    }
+
+    private boolean searchCrawlUpdate(int searchID){
+        String query = "UPDATE search_crawl SET searched = ? WHERE search_id = ?";
+        args.clear();
+        args.add('1');
+        args.add(searchID);
+        return mySQL.update(query, args,false) != 0;
     }
 
 }

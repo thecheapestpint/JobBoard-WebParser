@@ -4,14 +4,13 @@ import com.web.database.MongoDB.Pojo.JobBoardHolder;
 import com.web.database.MongoDB.Pojo.Page;
 import com.web.database.MongoDB.Pojo.Website;
 import com.web.scraper.Misc.ParseURL;
-import javassist.bytecode.stackmap.TypeData;
+import org.apache.log4j.LogManager;
 import org.bson.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.logging.Logger;
+
 
 
 public class JobBoardParser extends BaseParser {
@@ -21,7 +20,10 @@ public class JobBoardParser extends BaseParser {
     private String location;
     private List<JobBoardHolder> jobBoards;
 
-    private static final Logger LOGGER = Logger.getLogger( TypeData.ClassName.class.getName() );
+    private static int PAGE_LIMIT = 30;
+    private int page_number = 1;
+
+    private static final org.apache.log4j.Logger LOGGER = LogManager.getLogger(JobBoardParser.class.getName());
 
     private String firstPageURL;
 
@@ -67,7 +69,7 @@ public class JobBoardParser extends BaseParser {
         return "";
     }
 
-    public void scrapPage(org.jsoup.nodes.Document page) {
+    public void scrapePage(org.jsoup.nodes.Document page) {
         this.page = page;
         Map<String, String> container = pageConfig.getJobContainer();
         String containerKey = getKeyNotTag(container.keySet());
@@ -79,15 +81,19 @@ public class JobBoardParser extends BaseParser {
                     findJobInformation(contain);
                 }
             }
-            getNextPage();
+
+            LOGGER.debug("Calling next page:");
+            if (page_number <= PAGE_LIMIT) {
+                getNextPage();
+            }
         }
     }
 
 
 
     private boolean checkNextButton(Element nextPageContainer, Map<String, String> nextPage, String nextKey){
-        //return nextPageContainer.tagName().equals(nextPage.get("tag")) && nextPageContainer.text().toLowerCase().contains("next") || nextPageContainer.attributes().get(nextKey).contains(nextPage.get(nextKey));
-        return nextPageContainer.tagName().equals(nextPage.get("tag")) && nextPageContainer.text().toLowerCase().contains("next");
+        return nextPageContainer.tagName().equals(nextPage.get("tag")) && nextPageContainer.text().toLowerCase().contains("next") || nextPageContainer.attributes().get(nextKey).contains(nextPage.get(nextKey));
+        // return nextPageContainer.tagName().equals(nextPage.get("tag")) && nextPageContainer.text().toLowerCase().contains("next");
     }
 
     private Elements getPageContainer(String nextKey){
@@ -118,7 +124,9 @@ public class JobBoardParser extends BaseParser {
                 boolean callCheck = callPage(url);
                 if (callCheck) {
                     org.jsoup.nodes.Document newPage = phantomCall(url);
-                    scrapPage(newPage);
+                    page_number++;
+                    LOGGER.debug("Scrape new page. Page number: " + page_number);
+                    scrapePage(newPage);
                 }
             }
         }
@@ -127,7 +135,7 @@ public class JobBoardParser extends BaseParser {
     private boolean checkKeywordContains(String check) {
         String[] split = this.keywords.split("\\s+");
         for (String s : split) {
-            if (!check.contains(s)) {
+            if (!check.toLowerCase().contains(s.toLowerCase())) {
                 return false;
             }
         }
@@ -160,12 +168,10 @@ public class JobBoardParser extends BaseParser {
         Elements elems = container.getElementsByAttributeValueMatching(titleKey, jobTitleConfig.get(titleKey));
 
         if (elems != null && elems.size() > 0) {
-            System.out.println("Title element found");
             Element titleElement = elems.get(0);
-
             if (titleElement != null && checkKeywordContains(titleElement.text())) {
                 jobTitle = titleElement.text();
-                System.out.println("Title: " + jobTitle);
+                System.out.println("Title added: " + jobTitle);
             }
 
         }

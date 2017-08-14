@@ -71,7 +71,7 @@ public class Crawler {
                 Document newPage = search.getFirstResultsPage();
                 String phantomURL = search.getPhantomURL();
                 parser.setFirstPageURL(phantomURL);
-                parser.scrapPage(newPage);
+                parser.scrapePage(newPage);
                 this.jobs = parser.getJobs();
                 System.out.println(this.jobs.size() + "");
                 if (this.jobs.size() > 0) {

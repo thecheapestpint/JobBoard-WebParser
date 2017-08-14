@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class MySQLTest {
 
-  /*  private ArrayList<String> testArgs;
+   private ArrayList testArgs;
 
     public MySQLTest(){
         testArgs = new ArrayList<String>();
@@ -35,7 +35,7 @@ public class MySQLTest {
         testArgs.add("test keyword");
         MySQL mySQL = MySQL.instance("job_search");
         String query = "INSERT INTO keywords (keyword) VALUE (?)";
-        int res = mySQL.update(query, testArgs);
+        int res = mySQL.update(query, testArgs, false);
         Assert.assertEquals("Didn't insert", 1, res);
     }
 
@@ -55,9 +55,39 @@ public class MySQLTest {
         testArgs.add("test keyword");
         MySQL mySQL = MySQL.instance("job_search");
         String query = "DELETE FROM keywords WHERE keyword = ?";
-        int count = mySQL.update(query, testArgs);
+        int count = mySQL.update(query, testArgs, false);
         Assert.assertEquals("Should of deleted", 1, count);
     }
-    */
+
+    @Test
+    public void eAddSearch(){
+        testArgs.clear();
+        testArgs.add(999);
+        MySQL mySQL = MySQL.instance("job_search");
+        String query = "INSERT INTO search_crawl (search_id) VALUE (?)";
+        int count = mySQL.update(query, testArgs, false);
+        Assert.assertEquals("Should of inserted", 1, count);
+    }
+
+    @Test
+    public void fUpdateSearch(){
+        testArgs.clear();
+        testArgs.add('1');
+        MySQL mySQL = MySQL.instance("job_search");
+        String query = "UPDATE search_crawl SET searched = ?";
+        int count = mySQL.update(query, testArgs, false);
+        Assert.assertEquals("Should of inserted", 1, count);
+    }
+
+
+    @Test
+    public void gDeleteSearch(){
+        testArgs.clear();
+        testArgs.add(999);
+        MySQL mySQL = MySQL.instance("job_search");
+        String query = "DELETE FROM search_crawl WHERE search_id = ?";
+        int count = mySQL.update(query, testArgs, false);
+        Assert.assertEquals("Should of deleted", 1, count);
+    }
 
 }

@@ -51,11 +51,12 @@ public class MySQL {
     }
 
 
-    public int update(String query, ArrayList args) {
+    public int update(String query, ArrayList args, boolean returnLastID) {
         int last_id = 0;
+        int success = 0;
         try {
             PreparedStatement preparedStatement = prepare(query, args, true);
-            preparedStatement.executeUpdate();
+            success = preparedStatement.executeUpdate();
             ResultSet rs = preparedStatement.getGeneratedKeys();
             if(rs.next()) {
                  last_id = rs.getInt(1);
@@ -64,7 +65,7 @@ public class MySQL {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return last_id;
+        return (returnLastID) ? last_id : success;
     }
 
     private PreparedStatement prepare(String query, ArrayList args, boolean update) throws SQLException {
@@ -74,15 +75,16 @@ public class MySQL {
 
         for (int x = 0; x < args.size(); x++) {
             String type = args.get(x).getClass().getSimpleName();
-            if (type.equals("Integer")) {
-                preparedStatement.setInt(x + 1, Integer.valueOf(args.get(x).toString()));
-
-            } else if (type.equals("Float")) {
-                preparedStatement.setFloat(x + 1, Float.valueOf(args.get(x).toString()));
-
-            } else {
-                preparedStatement.setString(x + 1, String.valueOf(args.get(x)));
-
+            switch (type) {
+                case "Integer":
+                    preparedStatement.setInt(x + 1, Integer.valueOf(args.get(x).toString()));
+                    break;
+                case "Float":
+                    preparedStatement.setFloat(x + 1, Float.valueOf(args.get(x).toString()));
+                    break;
+                default:
+                    preparedStatement.setString(x + 1, String.valueOf(args.get(x)));
+                    break;
             }
         }
         return preparedStatement;

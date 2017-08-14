@@ -3,6 +3,8 @@ package com.web.scraper.Parser;
 import com.web.database.MongoDB.MongoWebsite;
 import com.web.scraper.Misc.MySingleton;
 import com.web.scraper.Validation.HTTPValidate;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
@@ -29,6 +31,8 @@ public class BaseParser {
     protected String phantomURL;
 
 
+    private static final Logger LOGGER = LogManager.getLogger(BaseParser.class.getName());
+
     protected MongoWebsite mongoWebsite;
 
     public BaseParser(String url) {
@@ -42,12 +46,15 @@ public class BaseParser {
     }
 
     public boolean callPage(String url) {
+        LOGGER.debug("callPage reached: " + url);
         String urlToCall = url.isEmpty() ? this.url : url;
         if (HTTPValidate.URLValidation(urlToCall)) {
+            LOGGER.trace("URL validated: " + url);
             try {
                 Document con = Jsoup.connect(urlToCall).get();
                 page = Jsoup.parse(con.html(), urlToCall, org.jsoup.parser.Parser.xmlParser());
-                return true;
+                LOGGER.debug("Page: " +page.toString());
+                return page != null;
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
@@ -71,7 +78,7 @@ public class BaseParser {
                 // URI uri = Thread.currentThread().getContextClassLoader().getResource("Phantom/phantomjs.exe").toURI();
                 System.setProperty("phantomjs.binary.path", path.toString());
             }
-
+            LOGGER.debug("Phantom call");
             webDriver = new PhantomJSDriver();
             webDriver.get(url);
             phantomURL = webDriver.getCurrentUrl();

@@ -9,6 +9,11 @@ import com.web.web.POST.SmartPost;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Optional;
 
@@ -17,21 +22,19 @@ import java.util.Optional;
 public class SearchResource {
     private final String template;
     private final String defaultName;
-    private final AtomicLong counter;
 
     public SearchResource(String template, String defaultName) {
         this.template = template;
         this.defaultName = defaultName;
-        this.counter = new AtomicLong();
+
     }
 
     @GET
     @Path("/cron")
     @Timed
-    public String cron(){
+    public void cron() {
         Search s = new Search();
         s.cronCrawl();
-        return "Cron has finished";
     }
 
 
@@ -40,26 +43,31 @@ public class SearchResource {
     @Timed
     public SearchResponse searchGet(
             @PathParam("keyword") String keyword,
-            @PathParam("location") String location){
+            @PathParam("location") String location) {
         SearchPost post = new SearchPost();
-        post.setKeyword(keyword);
-        post.setLocation(location);
-        return search(post);
+        post.setKeyword(keyword.toLowerCase());
+        post.setLocation(location.toLowerCase());
+        return search(keyword, location);
     }
 
     @POST
     @Path("/search")
-    @Timed
     @Consumes(MediaType.APPLICATION_JSON)
     public SearchResponse search(SearchPost searchPost) {
-        //String keyword = "Junior Android";
-        //String location = "London";
-        String keyword = searchPost.getKeyword();
-        String location = searchPost.getLocation();
+        String keyword = searchPost.getKeyword().toLowerCase();
+        String location = searchPost.getLocation().toLowerCase();
         System.out.println("Keyword = " + keyword);
-        Search s = new Search();
-        List<JobBoardHolder> jobs = s.searchJobs(keyword, location);
-        return new SearchResponse(true, jobs);
+        return new Search().searchJobs(keyword, location);
+    }
+
+
+    @POST
+    @Path("/search")
+    @Timed
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public SearchResponse search(@FormParam("keyword") String keyword, @FormParam("location") String location) {
+        System.out.println("Keyword = " + keyword);
+        return new Search().searchJobs(keyword, location);
     }
 
 
@@ -67,9 +75,9 @@ public class SearchResource {
     @Path("/search/smart")
     @Timed
     @Consumes(MediaType.APPLICATION_JSON)
-    public SearchResponse smartSearch(SmartPost smartPost){
-        String keyword = smartPost.getKeyword();
-        String location = smartPost.getLocation();
+    public SearchResponse smartSearch(SmartPost smartPost) {
+        String keyword = smartPost.getKeyword().toLowerCase();
+        String location = smartPost.getLocation().toLowerCase();
         int amount = smartPost.getAmount();
 
         Search s = new Search();

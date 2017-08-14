@@ -2,6 +2,7 @@ package com.web.web;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.web.database.MongoDB.Pojo.JobBoardHolder;
+import com.web.search.Search;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.List;
@@ -11,13 +12,18 @@ import java.util.List;
  */
 public class SearchResponse {
 
-    private long id;
-    private boolean success;
     private int count;
+    private boolean success;
+    private String message;
     private List<JobBoardHolder> jobs;
 
     public SearchResponse() {
         // Jackson deserialization
+    }
+
+    public SearchResponse(boolean success, String message){
+        this.success = success;
+        this.message = message;
     }
 
     public SearchResponse(boolean success, List<JobBoardHolder> content) {
