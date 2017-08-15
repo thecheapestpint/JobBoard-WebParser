@@ -33,13 +33,13 @@ public class JobApplication extends Application<JobSearchConfig> {
             logger.debug("Cron Crawl Started");
             Search s = new Search();
             s.cronCrawl();
-        }, 0, 4, TimeUnit.HOURS);
+        }, 0, 8, TimeUnit.HOURS);
 
         ses.scheduleAtFixedRate(() -> {
             Search s = new Search();
             logger.debug("Cron List Started");
             s.crawlListCron();
-        }, 0, 10, TimeUnit.MINUTES);
+        }, 0, 25, TimeUnit.MINUTES);
     }
 
     @Override

@@ -19,6 +19,7 @@ public class MySQLTest {
         testArgs = new ArrayList<String>();
     }
 
+    /*
     @Test
     public void aCheckKeywordEmpty(){
         testArgs.clear();
@@ -89,5 +90,5 @@ public class MySQLTest {
         int count = mySQL.update(query, testArgs, false);
         Assert.assertEquals("Should of deleted", 1, count);
     }
-
+*/
 }

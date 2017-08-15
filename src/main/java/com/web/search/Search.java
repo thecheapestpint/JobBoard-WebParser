@@ -364,7 +364,7 @@ public class Search {
         args.clear();
         args.add(keywordID);
         args.add(locationID);
-        return mySQL.update(insertQuery, args, false);
+        return mySQL.update(insertQuery, args, true);
     }
 
     private boolean searchCrawlUpdate(int searchID){
