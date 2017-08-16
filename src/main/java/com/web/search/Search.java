@@ -228,6 +228,7 @@ public class Search {
             logger.trace("document count is greater than 0");
             jobs = mongoJobBoard.getJobs(collection);
         }
+        mongoJobBoard.close();
         return jobs;
     }
 

@@ -101,6 +101,7 @@ public class Crawler {
                 }
             }
         }
+        mongoJobs.close();
     }
 
     private void checkRobot(String url) {

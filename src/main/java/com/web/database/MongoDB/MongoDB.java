@@ -26,19 +26,23 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 public class MongoDB implements MongoInterface {
 
     MongoDatabase mongoDatabase;
+    MongoClient mongoClient;
 
     public MongoDB(String db) {
         try {
             CodecRegistry pojoCodecRegistry = fromRegistries(
                     fromProviders(PojoCodecProvider.builder().register(JobBoardHolder.class, Website.class, Form.class, Page.class).build()),
                     MongoClient.getDefaultCodecRegistry());
-            MongoClient mongoClient = new MongoClient("localhost", MongoClientOptions.builder().codecRegistry(pojoCodecRegistry).build());
-
-
+            mongoClient = new MongoClient("localhost", MongoClientOptions.builder().codecRegistry(pojoCodecRegistry).build());
             mongoDatabase = mongoClient.getDatabase(db);
         } catch (MongoException e) {
             e.printStackTrace();
         }
+    }
+
+    public void close(){
+        mongoDatabase = null;
+        mongoClient.close();
     }
 
     public MongoDatabase getDatabase(){
