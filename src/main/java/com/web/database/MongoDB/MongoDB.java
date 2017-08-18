@@ -25,8 +25,8 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class MongoDB implements MongoInterface {
 
-    MongoDatabase mongoDatabase;
-    MongoClient mongoClient;
+    protected MongoDatabase mongoDatabase;
+    private MongoClient mongoClient;
 
     public MongoDB(String db) {
         try {
@@ -43,6 +43,10 @@ public class MongoDB implements MongoInterface {
     public void close(){
         mongoDatabase = null;
         mongoClient.close();
+    }
+
+    public void setDatabase(String db){
+        this.mongoDatabase = mongoClient.getDatabase(db);
     }
 
     public MongoDatabase getDatabase(){

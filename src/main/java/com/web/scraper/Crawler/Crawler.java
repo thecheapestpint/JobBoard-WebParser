@@ -3,6 +3,7 @@ package com.web.scraper.Crawler;
 import com.web.database.MongoDB.MongoJobBoard;
 import com.web.database.MongoDB.Pojo.Website;
 import com.web.database.MongoDB.Pojo.JobBoardHolder;
+import com.web.scraper.Misc.MySingleton;
 import com.web.scraper.Parser.JobBoardParser;
 import com.web.scraper.Parser.SearchParser;
 import com.web.scraper.Robot.Robot;
@@ -86,7 +87,7 @@ public class Crawler {
 
         String collection = this.keywords + "-" + this.location;
 
-        MongoJobBoard mongoJobs = new MongoJobBoard("job_search");
+        MongoJobBoard mongoJobs = MySingleton.INSTANCE.getMongoJobBoard();
         for (JobBoardHolder job : jobs) {
             Map<String, Object> map = new HashMap<String, Object>();
             map.put("jobLink", job.getJobLink());
@@ -101,7 +102,6 @@ public class Crawler {
                 }
             }
         }
-        mongoJobs.close();
     }
 
     private void checkRobot(String url) {

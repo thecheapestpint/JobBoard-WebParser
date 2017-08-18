@@ -37,7 +37,7 @@ public class BaseParser {
 
     public BaseParser(String url) {
         this.url = url;
-        mongoWebsite = new MongoWebsite("job_search");
+        mongoWebsite = MySingleton.INSTANCE.getMongoWebsite();
     }
 
     public void destroy(){

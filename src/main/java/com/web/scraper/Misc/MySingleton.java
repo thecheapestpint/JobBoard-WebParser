@@ -1,5 +1,7 @@
 package com.web.scraper.Misc;
 
+import com.web.database.MongoDB.MongoJobBoard;
+import com.web.database.MongoDB.MongoWebsite;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 
@@ -8,9 +10,23 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
  */
 public enum MySingleton {
     INSTANCE;
-    WebDriver webDriver = new PhantomJSDriver();
+    MongoWebsite mongoWebsite;
+    MongoJobBoard mongoJobBoard;
 
-    public WebDriver getWebDriver(){
-        return webDriver;
+    public MongoWebsite getMongoWebsite(){
+        if(mongoWebsite == null){
+            mongoWebsite = new MongoWebsite("job_search");
+        }
+        return mongoWebsite;
     }
+
+    public MongoJobBoard getMongoJobBoard(){
+        if (mongoJobBoard == null){
+            mongoJobBoard = new MongoJobBoard("job_search");
+        }
+        return mongoJobBoard;
+    }
+
 }
+
+

@@ -67,7 +67,7 @@ public class SearchResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public SearchResponse search(@FormParam("keyword") String keyword, @FormParam("location") String location) {
         System.out.println("Keyword = " + keyword);
-        return new Search().searchJobs(keyword, location);
+        return new Search().searchJobs(keyword.toLowerCase(), location.toLowerCase());
     }
 
 

@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 
+import com.web.scraper.Misc.MySingleton;
 import com.web.web.SearchResponse;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
