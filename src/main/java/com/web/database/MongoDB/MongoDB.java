@@ -1,5 +1,6 @@
 package com.web.database.MongoDB;
 
+import com.mongodb.client.*;
 import com.web.database.MongoDB.Pojo.Form;
 import com.web.database.MongoDB.Pojo.JobBoardHolder;
 import com.web.database.MongoDB.Pojo.Page;
@@ -8,10 +9,6 @@ import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.ListCollectionsIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -67,6 +64,12 @@ public class MongoDB implements MongoInterface {
             mongoIterable.forEach((Block<Document>) docs::add);
         }
         return docs;
+    }
+
+    public MongoIterable<String> getCollectionNames(){
+
+        return mongoDatabase.listCollectionNames();
+
     }
 
     @Override

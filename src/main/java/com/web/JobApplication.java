@@ -28,6 +28,13 @@ public class JobApplication extends Application<JobSearchConfig> {
     public void setupCronJobs(){
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(2);
 
+        // SETUP EXPIRY CRAWL
+        ses.scheduleAtFixedRate(() -> {
+            logger.debug("Expiry crawl started");
+            Search s = new Search();
+            s.cronCrawl();
+        }, 0, 12, TimeUnit.HOURS);
+
         // SETUP CRON CRAWL
         ses.scheduleAtFixedRate(() -> {
             logger.debug("Cron Crawl Started");
